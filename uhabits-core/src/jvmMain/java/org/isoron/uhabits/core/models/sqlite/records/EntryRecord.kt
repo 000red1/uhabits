@@ -44,10 +44,15 @@ class EntryRecord {
 
     @field:Column
     var notes: String? = null
+
+    @field:Column(name = "modified_at")
+    var modifiedAt: Long? = null
+
     fun copyFrom(entry: Entry) {
         timestamp = entry.timestamp.unixTime
         value = entry.value
         notes = entry.notes
+        modifiedAt = System.currentTimeMillis()
     }
 
     fun toEntry(): Entry {

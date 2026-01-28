@@ -33,6 +33,8 @@ import org.isoron.uhabits.core.models.sqlite.SQLiteHabitList
 import org.isoron.uhabits.core.preferences.Preferences
 import org.isoron.uhabits.core.preferences.WidgetPreferences
 import org.isoron.uhabits.core.reminders.ReminderScheduler
+import org.isoron.uhabits.core.sync.SyncClient
+import org.isoron.uhabits.core.sync.SyncManager
 import org.isoron.uhabits.core.tasks.TaskRunner
 import org.isoron.uhabits.core.ui.NotificationTray
 import org.isoron.uhabits.database.AndroidDatabase
@@ -41,6 +43,7 @@ import org.isoron.uhabits.intents.IntentScheduler
 import org.isoron.uhabits.io.AndroidLogging
 import org.isoron.uhabits.notifications.AndroidNotificationTray
 import org.isoron.uhabits.preferences.SharedPreferencesStorage
+import org.isoron.uhabits.sync.OkHttpSyncClient
 import org.isoron.uhabits.utils.DatabaseUtils
 import java.io.File
 
@@ -113,5 +116,22 @@ class HabitsModule(dbFile: File) {
     @AppScope
     fun getDatabase(): Database {
         return db
+    }
+
+    @Provides
+    @AppScope
+    fun getSyncClient(): SyncClient {
+        return OkHttpSyncClient()
+    }
+
+    @Provides
+    @AppScope
+    fun getSyncManager(
+        preferences: Preferences,
+        habitList: HabitList,
+        modelFactory: ModelFactory,
+        syncClient: SyncClient
+    ): SyncManager {
+        return SyncManager(preferences, habitList, modelFactory, syncClient)
     }
 }

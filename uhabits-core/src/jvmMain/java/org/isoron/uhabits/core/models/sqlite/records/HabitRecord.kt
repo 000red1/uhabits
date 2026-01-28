@@ -88,6 +88,9 @@ class HabitRecord {
     @field:Column
     var uuid: String? = null
 
+    @field:Column(name = "modified_at")
+    var modifiedAt: Long? = null
+
     fun copyFrom(model: Habit) {
         id = model.id
         name = model.name
@@ -114,6 +117,7 @@ class HabitRecord {
             reminderMin = reminder!!.minute
             reminderDays = reminder.days.toInteger()
         }
+        modifiedAt = System.currentTimeMillis()
     }
 
     fun copyTo(habit: Habit) {

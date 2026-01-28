@@ -199,6 +199,29 @@
     <string name="pref_view_privacy">View privacy policy</string>
     <string name="view_all_contributors">View all contributors…</string>
     <string name="database">Database</string>
+
+    <!-- Sync settings -->
+    <string name="sync_settings">Sync</string>
+    <string name="pref_sync_enabled_title">Enable sync</string>
+    <string name="pref_sync_enabled_description">Sync habits with a remote server</string>
+    <string name="pref_sync_url_title">Server URL</string>
+    <string name="pref_sync_url_description">Enter the URL of your sync server</string>
+    <string name="pref_sync_key_title">Sync key</string>
+    <string name="pref_sync_key_description">Authentication key for your sync server</string>
+    <string name="pref_sync_interval_title">Sync interval</string>
+    <string name="pref_sync_now_title">Sync now</string>
+    <string name="pref_sync_now_description">Manually trigger a sync</string>
+    <string name="pref_sync_status_title">Last sync</string>
+    <string name="sync_status_never">Never synced</string>
+    <string name="sync_status_success">Last sync: %s</string>
+    <string name="sync_status_error">Sync failed: %s</string>
+    <string name="sync_in_progress">Syncing…</string>
+    <string name="sync_success">Sync completed successfully</string>
+    <string name="sync_failed">Sync failed</string>
+    <string name="sync_not_configured">Please configure sync server URL and key</string>
+    <string name="sync_auth_failed">Authentication failed. Check your sync key.</string>
+    <string name="development">Development</string>
+    <string name="pref_developer_mode_title">Enable developer mode</string>
     <string name="widget_opacity_title">Widget opacity</string>
     <string name="widget_opacity_description">Makes widgets more transparent or more opaque in your home screen.</string>
     <string name="first_day_of_the_week">First day of the week</string>

@@ -29,6 +29,11 @@ import android.provider.DocumentsContract
 import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
+import android.widget.Toast
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import android.view.View
 import android.view.ViewGroup
 import androidx.preference.ListPreference
@@ -44,6 +49,8 @@ import org.isoron.uhabits.activities.habits.list.RESULT_EXPORT_DB
 import org.isoron.uhabits.activities.habits.list.RESULT_IMPORT_DATA
 import org.isoron.uhabits.activities.habits.list.RESULT_REPAIR_DB
 import org.isoron.uhabits.core.preferences.Preferences
+import org.isoron.uhabits.core.sync.SyncManager
+import org.isoron.uhabits.core.sync.SyncResult
 import org.isoron.uhabits.core.ui.NotificationTray
 import org.isoron.uhabits.core.utils.DateUtils.Companion.getLongWeekdayNames
 import org.isoron.uhabits.notifications.AndroidNotificationTray.Companion.createAndroidNotificationChannel
@@ -52,13 +59,17 @@ import org.isoron.uhabits.utils.StyledResources
 import org.isoron.uhabits.utils.applyBottomInset
 import org.isoron.uhabits.utils.startActivitySafely
 import org.isoron.uhabits.widgets.WidgetUpdater
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class SettingsFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListener {
     private var sharedPrefs: SharedPreferences? = null
     private var ringtoneManager: RingtoneManager? = null
     private lateinit var prefs: Preferences
     private var widgetUpdater: WidgetUpdater? = null
+    private var syncManager: SyncManager? = null
 
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -88,6 +99,7 @@ class SettingsFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeLis
         if (appContext is HabitsApplication) {
             prefs = appContext.component.preferences
             widgetUpdater = appContext.component.widgetUpdater
+            syncManager = appContext.component.syncManager
         }
         setResultOnPreferenceClick("importData", RESULT_IMPORT_DATA)
         setResultOnPreferenceClick("exportCSV", RESULT_EXPORT_CSV)
@@ -150,8 +162,62 @@ class SettingsFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeLis
                 startActivityForResult(intent, PUBLIC_BACKUP_REQUEST_CODE)
                 return true
             }
+            "syncNow" -> {
+                performSync()
+                return true
+            }
         }
         return super.onPreferenceTreeClick(preference)
+    }
+
+    private fun performSync() {
+        val manager = syncManager ?: return
+        val syncStatusPref = findPreference("syncStatus") ?: return
+
+        syncStatusPref.summary = getString(R.string.sync_in_progress)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = manager.sync(networkAvailable = true)
+            withContext(Dispatchers.Main) {
+                when (result) {
+                    is SyncResult.Success -> {
+                        Toast.makeText(context, R.string.sync_success, Toast.LENGTH_SHORT).show()
+                        updateSyncStatus()
+                    }
+                    is SyncResult.NotConfigured -> {
+                        Toast.makeText(context, R.string.sync_not_configured, Toast.LENGTH_SHORT).show()
+                        syncStatusPref.summary = getString(R.string.sync_status_never)
+                    }
+                    is SyncResult.AuthenticationFailed -> {
+                        Toast.makeText(context, R.string.sync_auth_failed, Toast.LENGTH_SHORT).show()
+                        syncStatusPref.summary = getString(R.string.sync_status_error, "Authentication failed")
+                    }
+                    is SyncResult.ServerError -> {
+                        Toast.makeText(context, R.string.sync_failed, Toast.LENGTH_SHORT).show()
+                        syncStatusPref.summary = getString(R.string.sync_status_error, result.message)
+                    }
+                    is SyncResult.Error -> {
+                        Toast.makeText(context, R.string.sync_failed, Toast.LENGTH_SHORT).show()
+                        syncStatusPref.summary = getString(R.string.sync_status_error, result.exception.message ?: "Unknown error")
+                    }
+                    else -> {
+                        syncStatusPref.summary = getString(R.string.sync_status_never)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun updateSyncStatus() {
+        val syncStatusPref = findPreference("syncStatus") ?: return
+        val lastSync = prefs.lastSyncTimestamp
+        if (lastSync > 0) {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+            val dateStr = dateFormat.format(Date(lastSync))
+            syncStatusPref.summary = getString(R.string.sync_status_success, dateStr)
+        } else {
+            syncStatusPref.summary = getString(R.string.sync_status_never)
+        }
     }
 
     override fun onResume() {
@@ -165,6 +231,7 @@ class SettingsFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeLis
         }
         updateWeekdayPreference()
         updatePublicBackupFolderSummary()
+        updateSyncStatus()
 
         findPreference("reminderSound").isVisible = false
     }

@@ -211,6 +211,53 @@ open class Preferences(private val storage: Storage) {
             for (l in listeners) l.onQuestionMarksChanged()
         }
 
+    // Sync preferences
+    var isSyncEnabled: Boolean
+        get() = storage.getBoolean("pref_sync_enabled", false)
+        set(enabled) {
+            storage.putBoolean("pref_sync_enabled", enabled)
+            for (l in listeners) l.onSyncSettingsChanged()
+        }
+
+    var syncBaseUrl: String
+        get() = storage.getString("pref_sync_base_url", "")
+        set(url) {
+            storage.putString("pref_sync_base_url", url)
+            for (l in listeners) l.onSyncSettingsChanged()
+        }
+
+    var syncKey: String
+        get() = storage.getString("pref_sync_key", "")
+        set(key) {
+            storage.putString("pref_sync_key", key)
+        }
+
+    var lastSyncTimestamp: Long
+        get() = storage.getLong("pref_last_sync_timestamp", 0)
+        set(timestamp) {
+            storage.putLong("pref_last_sync_timestamp", timestamp)
+        }
+
+    var syncIntervalMinutes: Int
+        get() = storage.getInt("pref_sync_interval", 60)
+        set(interval) {
+            storage.putInt("pref_sync_interval", interval)
+            for (l in listeners) l.onSyncSettingsChanged()
+        }
+
+    var syncClientId: String
+        get() {
+            var clientId = storage.getString("pref_sync_client_id", "")
+            if (clientId.isEmpty()) {
+                clientId = java.util.UUID.randomUUID().toString()
+                storage.putString("pref_sync_client_id", clientId)
+            }
+            return clientId
+        }
+        set(value) {
+            storage.putString("pref_sync_client_id", value)
+        }
+
     /**
      * @return An integer representing the first day of the week. Sunday
      * corresponds to 1, Monday to 2, and so on, until Saturday, which is
@@ -243,6 +290,7 @@ open class Preferences(private val storage: Storage) {
         fun onCheckmarkSequenceChanged() {}
         fun onNotificationsChanged() {}
         fun onQuestionMarksChanged() {}
+        fun onSyncSettingsChanged() {}
     }
 
     interface Storage {
