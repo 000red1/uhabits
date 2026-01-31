@@ -97,10 +97,20 @@ class SyncManager(
     private suspend fun performSync(baseUrl: String, syncKey: String): SyncResult {
         val lastSyncTimestamp = preferences.lastSyncTimestamp
         val clientId = preferences.syncClientId
+        val syncMode = preferences.syncMode
 
-        // Collect local changes
-        val localHabits = collectLocalHabits(lastSyncTimestamp)
-        val localEntries = collectLocalEntries(lastSyncTimestamp)
+        // Collect local changes (skip if download-only mode)
+        val localHabits = if (syncMode != SyncMode.DOWNLOAD_ONLY) {
+            collectLocalHabits(lastSyncTimestamp)
+        } else {
+            emptyList()
+        }
+
+        val localEntries = if (syncMode != SyncMode.DOWNLOAD_ONLY) {
+            collectLocalEntries(lastSyncTimestamp)
+        } else {
+            emptyList()
+        }
 
         // Build and send request
         val request = SyncRequest(
@@ -112,9 +122,18 @@ class SyncManager(
 
         val response = syncClient.sync(baseUrl, syncKey, request)
 
-        // Apply remote changes
-        val habitsDownloaded = applyRemoteHabits(response.habits, response.deletedHabitUuids)
-        val entriesDownloaded = applyRemoteEntries(response.entries, response.deletedEntries)
+        // Apply remote changes (skip if upload-only mode)
+        val habitsDownloaded = if (syncMode != SyncMode.UPLOAD_ONLY) {
+            applyRemoteHabits(response.habits, response.deletedHabitUuids)
+        } else {
+            0
+        }
+
+        val entriesDownloaded = if (syncMode != SyncMode.UPLOAD_ONLY) {
+            applyRemoteEntries(response.entries, response.deletedEntries)
+        } else {
+            0
+        }
 
         // Update last sync timestamp
         preferences.lastSyncTimestamp = response.serverTimestamp

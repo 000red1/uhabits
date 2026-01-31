@@ -209,6 +209,8 @@
     <string name="pref_sync_key_title">Sync key</string>
     <string name="pref_sync_key_description">Authentication key for your sync server</string>
     <string name="pref_sync_interval_title">Sync interval</string>
+    <string name="pref_sync_mode_title">Sync mode</string>
+    <string name="pref_sync_mode_description">Choose how data is synchronized</string>
     <string name="pref_sync_now_title">Sync now</string>
     <string name="pref_sync_now_description">Manually trigger a sync</string>
     <string name="pref_sync_status_title">Last sync</string>

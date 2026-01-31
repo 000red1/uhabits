@@ -23,6 +23,7 @@ import org.isoron.platform.utils.StringUtils.Companion.joinLongs
 import org.isoron.platform.utils.StringUtils.Companion.splitLongs
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.Timestamp
+import org.isoron.uhabits.core.sync.SyncMode
 import org.isoron.uhabits.core.ui.ThemeSwitcher
 import org.isoron.uhabits.core.utils.DateUtils.Companion.getFirstWeekdayNumberAccordingToLocale
 import java.util.LinkedList
@@ -256,6 +257,26 @@ open class Preferences(private val storage: Storage) {
         }
         set(value) {
             storage.putString("pref_sync_client_id", value)
+        }
+
+    /**
+     * Sync mode determines how data is synchronized:
+     * - BIDIRECTIONAL: Upload and download changes (default)
+     * - UPLOAD_ONLY: Only upload local changes to server
+     * - DOWNLOAD_ONLY: Only download remote changes from server
+     */
+    var syncMode: SyncMode
+        get() {
+            val mode = storage.getString("pref_sync_mode", "BIDIRECTIONAL")
+            return try {
+                SyncMode.valueOf(mode)
+            } catch (e: IllegalArgumentException) {
+                SyncMode.BIDIRECTIONAL
+            }
+        }
+        set(mode) {
+            storage.putString("pref_sync_mode", mode.name)
+            for (l in listeners) l.onSyncSettingsChanged()
         }
 
     /**

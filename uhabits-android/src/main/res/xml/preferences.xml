@@ -197,6 +197,16 @@
                 android:title="@string/pref_sync_interval_title"
                 app:iconSpaceReserved="false" />
 
+        <ListPreference
+                android:defaultValue="BIDIRECTIONAL"
+                android:dependency="pref_sync_enabled"
+                android:entries="@array/sync_mode_entries"
+                android:entryValues="@array/sync_mode_values"
+                android:key="pref_sync_mode"
+                android:summary="@string/pref_sync_mode_description"
+                android:title="@string/pref_sync_mode_title"
+                app:iconSpaceReserved="false" />
+
         <Preference
                 android:dependency="pref_sync_enabled"
                 android:key="syncNow"
