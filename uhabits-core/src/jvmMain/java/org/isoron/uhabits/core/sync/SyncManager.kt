@@ -122,6 +122,13 @@ class SyncManager(
 
         val response = syncClient.sync(baseUrl, syncKey, request)
 
+        // Check if server requested a full sync (reset and re-upload)
+        if (response.forceFullSync && lastSyncTimestamp > 0) {
+            // Reset lastSyncTimestamp and perform a full sync
+            preferences.lastSyncTimestamp = 0
+            return performSync(baseUrl, syncKey)
+        }
+
         // Apply remote changes (skip if upload-only mode)
         val habitsDownloaded = if (syncMode != SyncMode.UPLOAD_ONLY) {
             applyRemoteHabits(response.habits, response.deletedHabitUuids)

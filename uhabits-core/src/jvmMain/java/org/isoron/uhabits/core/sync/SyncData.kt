@@ -40,7 +40,8 @@ data class SyncResponse(
     val habits: List<SyncHabitData>,
     val entries: List<SyncEntryData>,
     val deletedHabitUuids: List<String>,
-    val deletedEntries: List<DeletedEntryRef>
+    val deletedEntries: List<DeletedEntryRef>,
+    val forceFullSync: Boolean = false  // If true, reset lastSyncTimestamp and re-upload all data
 )
 
 /**
